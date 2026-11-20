@@ -5,6 +5,7 @@ from pathlib import Path
 
 from multitool.codec import decode, encode
 from multitool.hash import hash_file, hash_text
+from multitool.health import run_health
 from multitool.net import network_info
 from multitool.units import convert
 
@@ -38,7 +39,25 @@ def _run_net(cidr: str, parser: argparse.ArgumentParser) -> None:
     print(f"host_count: {info.host_count}")
 
 
-def main() -> None:
+def _run_codec(args: argparse.Namespace) -> None:
+    operation = encode if args.direction == "encode" else decode
+    print(operation(args.scheme, args.text))
+
+
+def _run_units(args: argparse.Namespace, parser: argparse.ArgumentParser) -> None:
+    try:
+        result = convert(args.value, args.from_unit, args.to_unit)
+        print(f"{result:.1f}" if args.from_unit in ("C", "F", "K") else result)
+    except ValueError as error:
+        parser.error(str(error))
+
+
+def _build_parser() -> tuple[
+    argparse.ArgumentParser,
+    argparse.ArgumentParser,
+    argparse.ArgumentParser,
+    argparse.ArgumentParser,
+]:
     parser = argparse.ArgumentParser(prog="mt")
     parser.add_argument(
         "--version",
@@ -70,19 +89,26 @@ def main() -> None:
     net_parser = subparsers.add_parser("net", help="show network details")
     net_parser.add_argument("cidr", help="IPv4 or IPv6 network in CIDR notation")
 
+    health_parser = subparsers.add_parser("health", help="check a Python project")
+    health_parser.add_argument("path", type=Path, help="project directory to check")
+
+    return parser, units_parser, hash_parser, net_parser
+
+
+def main() -> None:
+    parser, units_parser, hash_parser, net_parser = _build_parser()
+
     args = parser.parse_args()
     if args.command == "echo":
         print(" ".join(args.text))
     elif args.command == "codec":
-        operation = encode if args.direction == "encode" else decode
-        print(operation(args.scheme, args.text))
+        _run_codec(args)
     elif args.command == "units":
-        try:
-            result = convert(args.value, args.from_unit, args.to_unit)
-            print(f"{result:.1f}" if args.from_unit in ("C", "F", "K") else result)
-        except ValueError as error:
-            units_parser.error(str(error))
+        _run_units(args, units_parser)
     elif args.command == "hash":
         _run_hash(args, hash_parser)
     elif args.command == "net":
         _run_net(args.cidr, net_parser)
+    elif args.command == "health":
+        if not run_health(args.path):
+            raise SystemExit(1)
