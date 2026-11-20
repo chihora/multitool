@@ -5,7 +5,37 @@ from pathlib import Path
 
 from multitool.codec import decode, encode
 from multitool.hash import hash_file, hash_text
+from multitool.net import network_info
 from multitool.units import convert
+
+
+def _run_hash(args: argparse.Namespace, parser: argparse.ArgumentParser) -> None:
+    try:
+        digest = (
+            hash_file(args.algorithm, args.file)
+            if args.file is not None
+            else hash_text(args.algorithm, args.text)
+        )
+    except OSError as error:
+        parser.error(str(error))
+
+    print(digest)
+    if args.verify is not None and not hmac.compare_digest(digest, args.verify.lower()):
+        raise SystemExit(1)
+
+
+def _run_net(cidr: str, parser: argparse.ArgumentParser) -> None:
+    try:
+        info = network_info(cidr)
+    except ValueError as error:
+        parser.error(str(error))
+
+    print(f"network: {info.network}")
+    print(f"broadcast: {info.broadcast}")
+    print(f"netmask: {info.netmask}")
+    print(f"first_host: {info.first_host}")
+    print(f"last_host: {info.last_host}")
+    print(f"host_count: {info.host_count}")
 
 
 def main() -> None:
@@ -37,6 +67,9 @@ def main() -> None:
     hash_input.add_argument("--file", type=Path, help="file to hash")
     hash_parser.add_argument("--verify", metavar="DIGEST", help="exit 1 if the digest differs")
 
+    net_parser = subparsers.add_parser("net", help="show network details")
+    net_parser.add_argument("cidr", help="IPv4 or IPv6 network in CIDR notation")
+
     args = parser.parse_args()
     if args.command == "echo":
         print(" ".join(args.text))
@@ -50,15 +83,6 @@ def main() -> None:
         except ValueError as error:
             units_parser.error(str(error))
     elif args.command == "hash":
-        try:
-            digest = (
-                hash_file(args.algorithm, args.file)
-                if args.file is not None
-                else hash_text(args.algorithm, args.text)
-            )
-        except OSError as error:
-            hash_parser.error(str(error))
-
-        print(digest)
-        if args.verify is not None and not hmac.compare_digest(digest, args.verify.lower()):
-            raise SystemExit(1)
+        _run_hash(args, hash_parser)
+    elif args.command == "net":
+        _run_net(args.cidr, net_parser)
