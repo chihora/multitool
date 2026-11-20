@@ -10,6 +10,7 @@ Run `uv run python -m unittest discover -s tests`.
 Use `uv` exclusively for dependency and environment management; do not invoke `pip` directly.
 Use only the standard library's `unittest`; do not add pytest or another test framework.
 Keep the gate order fixed as lint, format check, type check, then unittest.
+New modules: use the add-module skill.
 ## Rules that must hold (enforced)
 Never edit files under tests/ to make a gate pass. Enforced by: opencode.json, edit on tests/ asks.
 Never weaken or bypass a gate to make work pass. Enforced by: review.
