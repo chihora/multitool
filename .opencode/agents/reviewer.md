@@ -10,6 +10,8 @@ permission:
     "uv run ty check": allow
     "uv run python -m unittest discover -s tests": allow
     "git diff": allow
+    "git diff --cached": allow
+    "git diff HEAD": allow
     "git status": allow
 ---
 
