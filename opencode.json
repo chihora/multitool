@@ -1,5 +1,11 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "formatter": {
+    "after-edit": {
+      "command": ["uv", "run", "python", "guard/after_edit.py", "$FILE"],
+      "extensions": [".py"]
+    }
+  },
   "permission": {
     "skill": "ask",
     "bash": {

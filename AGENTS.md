@@ -12,7 +12,7 @@ Use only the standard library's `unittest`; do not add pytest or another test fr
 Keep the gate order fixed as lint, format check, type check, then unittest.
 New modules: use the add-module skill.
 ## Rules that must hold (enforced)
-Never edit files under tests/ to make a gate pass. Enforced by: opencode.json, edit on tests/ asks.
+Never edit files under tests/ to make a gate pass. Enforced by: opencode.json (edit on tests/ asks) and .opencode/plugins/guard.ts -> guard/guard.py (blocks).
 Never weaken or bypass a gate to make work pass. Enforced by: review.
 Do not report completion until every gate exit code is known. Enforced by: the definition of done.
 ## Where the truth lives
